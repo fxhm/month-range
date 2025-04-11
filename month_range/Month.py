@@ -56,28 +56,6 @@ class Month(MonthRange):
         today = date.today()
         return cls(today.year, today.month)
 
-    @classmethod
-    def from_number(cls, value: int | float) -> Month:
-        # Month number (1-12)
-        if 1 <= value <= 12:
-            return cls(date.today().year, value)
-
-        # YYYYMM format
-        elif 100001 <= value <= 999999:
-            month = value % 100
-            if 1 <= month <= 12:
-                return cls(value // 100, month)
-
-        raise ValueError(f"Unable to parse {value} as Month")
-
-    @classmethod
-    def from_string(cls, value: str) -> Month:
-        try:
-            vals = value.split("-", maxsplit=1)
-            return cls(int(vals[0]), int(vals[1]))
-        except (ValueError, IndexError):
-            raise ValueError(f"Unable to parse {value} as Month")
-
     @property
     def year(self):
         return self._year
