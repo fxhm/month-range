@@ -1,11 +1,27 @@
 [project]
 name = "month-range"
-version = "0.1.0"
+version = "0.0.5"
 description = "Handling of month based time ranges."
 requires-python = ">=3.13"
 readme = "README.md"
+license = {file = "LICENSE"}
 authors = [{name = "Felix Hofmann", email = "felix@hofmann.rocks"}]
-
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Utilities",
+]
+keywords = ["date", "month", "range", "calendar", "period", "finance", "quarter", "fiscal"]
 
 [dependency-groups]
 dev = [

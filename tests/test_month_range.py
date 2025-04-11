@@ -22,6 +22,7 @@ def test_parse():
     assert MonthRange.parse(12) == Year(12)
     assert MonthRange.parse(202500) == Year(202500)
 
+    assert MonthRange.parse(["2023-01", "2023-03"]) == QuarterYear(2023, 1)
 
 
 def test_set_ops():
