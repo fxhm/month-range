@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING, List, Any, Mapping, Tuple, Type, Self
+from typing import TYPE_CHECKING, List, Any, Mapping, Tuple, Type, Self, Sequence
 
 if TYPE_CHECKING:
     from .Month import Month
@@ -42,23 +42,30 @@ class MonthRange:
                 return sub_type.parse(v)
             except ValueError:
                 pass
+
         if isinstance(v, Mapping):
             start = None
-            for key in ["start", "from", "min", "begin", "first"]:
-                if key in v:
+            for key in v.keys():
+                if key.lower() in ["start", "from", "min", "begin", "first"]:
                     start = cls.parse(v[key])
                     break
             cls._abort_parse(v, start is None)
 
             end = None
-            for key in ["end", "to", "max", "until", "last"]:
-                if key in v:
+            for key in v.keys():
+                if key.lower() in ["end", "to", "max", "until", "last"]:
                     end = cls.parse(v[key])
                     break
             cls._abort_parse(v, end is None)
 
             result = MonthRange(start=start, end=end)
             return result.simplify() if simplify else result
+
+        elif isinstance(v, Sequence):
+            if len(v) == 2:
+                result = MonthRange(start=cls.parse(v[0]), end=cls.parse(v[1]))
+                return result.simplify() if simplify else result
+
         cls._abort_parse(v)
 
     @property

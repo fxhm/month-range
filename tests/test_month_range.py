@@ -1,4 +1,28 @@
+import pytest
+
 from month_range import Month, MonthRange, QuarterYear, HalfYear, Year
+
+
+def test_parse():
+    for v in [202501, "202501", "2025-01", "2025-m01"]:
+        assert MonthRange.parse(v) == Month(2025, 1)
+
+    for v in ["2025-q1", "2025-q01", "2025-quarter1"]:
+        assert MonthRange.parse(v) == QuarterYear(2025, 1)
+
+    for v in ["2025-h1", "2025-h01", "2025-half1"]:
+        assert MonthRange.parse(v) == HalfYear(2025, 1)
+
+    for v in ["sdfg", "2025-m123"]:
+        with pytest.raises(Exception):
+            MonthRange.parse(v)
+
+    assert MonthRange.parse(20) == Year(20)
+    assert MonthRange.parse("20") == Year(20)
+    assert MonthRange.parse(12) == Year(12)
+    assert MonthRange.parse(202500) == Year(202500)
+
+
 
 def test_set_ops():
     assert Month(2025, 1) | Month(2025, 2) == [MonthRange(Month(2025, 1), Month(2025, 2))]

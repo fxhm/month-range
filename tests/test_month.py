@@ -116,6 +116,8 @@ def test_current():
     today = date.today()
     assert Month.current().month == today.month
     assert Month.current().year == today.year
+    assert Month.current() == Month.parse(today)
+    assert today in Month.current()
 
 def test_str():
     assert str(Month(2025, 1)) == "2025-01"
