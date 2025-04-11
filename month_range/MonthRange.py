@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING, List, Any, Callable, Mapping, Tuple, Type, Self
+from typing import TYPE_CHECKING, List, Any, Mapping, Tuple, Type, Self
 
 if TYPE_CHECKING:
     from .Month import Month
@@ -10,9 +10,6 @@ if TYPE_CHECKING:
 class MonthRange:
     # resolving circular deps. why do you make me do this python?
     __sub_types__: Tuple[Type[MonthRange], ...]
-    __union_func__: Callable
-    __intersect_func__: Callable
-    __simplify_func__: Callable
 
     _first_month: Month
     _last_month: Month
@@ -121,13 +118,13 @@ class MonthRange:
         return self.first_month.prev() == other.last_month
 
     def simplify(self) -> MonthRange:
-        return self.__simplify_func__(self)
+        ...
 
     def union(self, *others: MonthRange, simplify: bool = True) -> List[MonthRange]:
-        return self.__union_func__(self, *others, simplify=simplify)
+        ...
 
     def intersect(self, *others: MonthRange, simplify: bool = True) -> MonthRange | None:
-        return self.__intersect_func__(self, *others, simplify=simplify)
+        ...
 
     def _assert_comparable(self, other: Any) -> None:
         if not isinstance(other, MonthRange):
@@ -147,7 +144,11 @@ class MonthRange:
 
     def __eq__(self, other: MonthRange) -> bool:
         self._assert_comparable(other)
-        return self.first_month == other.first_month and self.last_month == other.last_month
+        return (
+            (self.first_month.year, self.first_month.month, self.last_month.year, self.last_month.month)
+            ==
+            (other.first_month.year, other.first_month.month, other.last_month.year, other.last_month.month)
+        )
 
     def __contains__(self, other: MonthRange | datetime | date) -> bool:
         if isinstance(other, datetime | date):
@@ -194,10 +195,34 @@ class MonthRange:
         return False
 
     def __le__(self, other: MonthRange | datetime | date) -> bool:
-        return other < self or other in self
+        if isinstance(other, datetime | date):
+            check_year = other.year
+            check_month = other.month
+        else:
+            self._assert_comparable(other)
+            check_year = other.first_month.year
+            check_month = other.first_month.month
+
+        if self.last_month.year < check_year:
+            return True
+        if self.last_month.year == check_year:
+            return self.last_month.month <= check_month
+        return False
 
     def __ge__(self, other: MonthRange | datetime | date) -> bool:
-        return other > self or other in self
+        if isinstance(other, datetime | date):
+            check_year = other.year
+            check_month = other.month
+        else:
+            self._assert_comparable(other)
+            check_year = other.last_month.year
+            check_month = other.last_month.month
+
+        if self.first_month.year > check_year:
+            return True
+        if self.first_month.year == check_year:
+            return self.first_month.month >= check_month
+        return False
 
     def __add__(self, offset: int) -> MonthRange:
         return self.next(offset)
