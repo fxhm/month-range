@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from calendar import monthrange
 from datetime import date, datetime
 from typing import TYPE_CHECKING, List, Any, Mapping, Tuple, Type, Self, Sequence
+from zoneinfo import ZoneInfo
 
 if TYPE_CHECKING:
     from .Month import Month
 
+TIMEZONE_NAME = datetime.now().astimezone().tzname()
 
 class MonthRange:
     # resolving circular deps. why do you make me do this python?
@@ -96,6 +99,26 @@ class MonthRange:
     @property
     def last_month(self) -> Month:
         return self._last_month
+
+    @property
+    def first_day(self) -> date:
+        return date(self.last_month.year, self.last_month.month, 1)
+
+    @property
+    def last_day(self) -> date:
+        return date(
+            self.last_month.year,
+            self.last_month.month,
+            monthrange(self.last_month.year, self.last_month.month)[1],
+        )
+
+    @property
+    def first_moment(self) -> datetime:
+        return datetime.combine(self.first_day, datetime.min.time(), tzinfo=ZoneInfo(TIMEZONE_NAME))
+
+    @property
+    def last_moment(self) -> datetime:
+        return datetime.combine(self.last_day, datetime.max.time(), tzinfo=ZoneInfo(TIMEZONE_NAME))
 
     def next(self, offset: int = 1) -> MonthRange:
         if offset == 0:
