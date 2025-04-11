@@ -1,29 +1,68 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Type, Tuple, Callable, Iterable
+from datetime import date, datetime
+from typing import TYPE_CHECKING, List, Any, Callable, Mapping, Tuple, Type, Self
 
-from .Year import Year
-from .HalfYear import HalfYear
-from .QuarterYear import QuarterYear
-from .util import intersect, union
-from .Month import Month
+if TYPE_CHECKING:
+    from .Month import Month
 
 
 class MonthRange:
+    # resolving circular deps. why do you make me do this python?
+    __sub_types__: Tuple[Type[MonthRange], ...]
+    __union_func__: Callable
+    __intersect_func__: Callable
+    __simplify_func__: Callable
+
     _first_month: Month
     _last_month: Month
-    
-    def __init__(self, first_month: Month | str | int, last_month: Month | str | int) -> None:
-        if not isinstance(first_month, Month):
-            first_month = Month(first_month)
-        if not isinstance(last_month, Month):
-            last_month = Month(last_month)
+
+    def __init__(self, start: MonthRange, end: MonthRange, strict: bool = False) -> None:
+        if not isinstance(start, MonthRange):
+            raise ValueError(f"invalid month range start: {start}")
+        if not isinstance(end, MonthRange):
+            raise ValueError(f"invalid month range end: {end}")
+        first_month = start.first_month
+        last_month = end.last_month
         if first_month <= last_month:
             self._first_month = first_month
             self._last_month = last_month
-        else:
+        elif not strict:
             self._first_month = last_month
             self._last_month = first_month
+        else:
+            raise ValueError("first_month after last_month")
+
+    @classmethod
+    def _abort_parse(cls, v: Any, condition: bool = True) -> None:
+        if condition:
+            raise ValueError(f"unable to parse {v} as {cls.__name__}")
+
+    @classmethod
+    def parse(cls, v: Any, *, simplify: bool = True) -> Self:
+        for sub_type in cls.__sub_types__:
+            try:
+                return sub_type.parse(v)
+            except ValueError:
+                pass
+        if isinstance(v, Mapping):
+            start = None
+            for key in ["start", "from", "min", "begin", "first"]:
+                if key in v:
+                    start = cls.parse(v[key])
+                    break
+            cls._abort_parse(v, start is None)
+
+            end = None
+            for key in ["end", "to", "max", "until", "last"]:
+                if key in v:
+                    end = cls.parse(v[key])
+                    break
+            cls._abort_parse(v, end is None)
+
+            result = MonthRange(start=start, end=end)
+            return result.simplify() if simplify else result
+        cls._abort_parse(v)
 
     @property
     def month_count(self) -> int:
@@ -32,7 +71,6 @@ class MonthRange:
         if first_month.year == last_month.year:
             return last_month.month - first_month.month + 1
         return 13 - first_month.month + last_month.month + 12 * (last_month.year - first_month.year - 1)
-
 
     @property
     def months(self) -> List[Month]:
@@ -55,68 +93,51 @@ class MonthRange:
     def last_month(self) -> Month:
         return self._last_month
 
-    def next(self, off: int = 1) -> MonthRange:
-        if off == 0:
+    def next(self, offset: int = 1) -> MonthRange:
+        if offset == 0:
             return self
         return MonthRange(
-            first_month=self.first_month.next(off=off * self.month_count),
-            last_month=self.last_month.next(off=off * self.month_count),
+            start=self.first_month.next(offset=offset * self.month_count),
+            end=self.last_month.next(offset=offset * self.month_count),
         )
 
-    def prev(self, off: int = 1) -> MonthRange:
-        if off == 0:
+    def prev(self, offset: int = 1) -> MonthRange:
+        if offset == 0:
             return self
         return MonthRange(
-            first_month=self.first_month.prev(off=off * self.month_count),
-            last_month=self.last_month.prev(off=off * self.month_count),
+            start=self.first_month.prev(offset=offset * self.month_count),
+            end=self.last_month.prev(offset=offset * self.month_count),
         )
-
-    def simplify(self) -> MonthRange:
-        # todo check if is MonthRange or already simplified subclass
-        first_month = self.first_month
-        last_month = self.last_month
-        if first_month.year == last_month.year:
-            if first_month.month == last_month.month:
-                return first_month
-            if first_month.month == 1:
-                if last_month.month == 12:
-                    return Year(year=first_month.year)
-                if last_month.month == 6:
-                    return HalfYear(year=first_month.year, half=1)
-                if last_month.month == 3:
-                    return QuarterYear(year=first_month.year, quarter=1)
-            if first_month.month == 4 and last_month.month == 6:
-                return QuarterYear(year=first_month.year, quarter=2)
-            if first_month.month == 7:
-                if last_month.month == 12:
-                    return HalfYear(year=first_month.year, half=2)
-                if last_month.month == 9:
-                    return QuarterYear(year=first_month.year, quarter=3)
-            if first_month.month == 10 and last_month.month == 12:
-                return QuarterYear(year=first_month.year, quarter=4)
-        return self
 
     def overlaps(self, other: MonthRange) -> bool:
-        return other.first_month in self or other.last_month in self or self.first_month in other or self.last_month in other
+        return (
+            other.first_month in self
+            or other.last_month in self
+            or self.first_month in other
+            or self.last_month in other
+        )
 
     def follows_directly(self, other: MonthRange) -> bool:
         return self.first_month.prev() == other.last_month
 
+    def simplify(self) -> MonthRange:
+        return self.__simplify_func__(self)
+
     def union(self, *others: MonthRange, simplify: bool = True) -> List[MonthRange]:
-        return union(self, *others, simplify=simplify)
+        return self.__union_func__(self, *others, simplify=simplify)
 
     def intersect(self, *others: MonthRange, simplify: bool = True) -> MonthRange | None:
-        return intersect(self, *others, simplify=simplify)
+        return self.__intersect_func__(self, *others, simplify=simplify)
 
-    def _check_valid_operands(self, other):
-        if not hasattr(other, 'first_month') or not hasattr(other, 'last_month'):
-            raise NotImplementedError(f'cannot compare {self.__class__.__name__} to {other.__class__.__name__}')
+    def _assert_comparable(self, other: Any) -> None:
+        if not isinstance(other, MonthRange):
+            raise ValueError(f"cannot compare {self.__class__.__name__} to {other.__class__.__name__}")
 
     def __repr__(self):
         return str(self)
 
     def __str__(self) -> str:
-        return f'{self.first_month} ↔ {self.last_month}'
+        return f"{self.first_month} ↔ {self.last_month}"
 
     def __hash__(self):
         return hash((self.first_month.year, self.first_month.month, self.last_month.year, self.last_month.month))
@@ -124,35 +145,65 @@ class MonthRange:
     def __len__(self) -> int:
         return self.month_count
 
-    def __contains__(self, other: MonthRange) -> bool:
-        self._check_valid_operands(other)
-        return other.first_month >= self.first_month and other.last_month <= self.last_month
-
     def __eq__(self, other: MonthRange) -> bool:
-        self._check_valid_operands(other)
+        self._assert_comparable(other)
         return self.first_month == other.first_month and self.last_month == other.last_month
 
-    def __lt__(self, other: MonthRange) -> bool:
-        self._check_valid_operands(other)
-        if self.first_month.year < other.first_month.year:
+    def __contains__(self, other: MonthRange | datetime | date) -> bool:
+        if isinstance(other, datetime | date):
+            first_month = self.first_month
+            last_month = self.last_month
+            if other.year < first_month.year or other.year > last_month.year:
+                return False
+            if other.year == first_month.year and other.month < first_month.month:
+                return False
+            if other.year == last_month.year and other.month > first_month.month:
+                return False
             return True
-        if self.first_month.year == other.first_month.year:
-            return self.first_month.month < other.first_month.month
+        self._assert_comparable(other)
+        return other.first_month >= self.first_month and other.last_month <= self.last_month
+
+    def __lt__(self, other: MonthRange | datetime | date) -> bool:
+        if isinstance(other, datetime | date):
+            check_year = other.year
+            check_month = other.month
+        else:
+            self._assert_comparable(other)
+            check_year = other.first_month.year
+            check_month = other.first_month.month
+
+        if self.last_month.year < check_year:
+            return True
+        if self.last_month.year == check_year:
+            return self.last_month.month < check_month
         return False
 
-    def __gt__(self, other: MonthRange) -> bool:
-        self._check_valid_operands(other)
-        if self.last_month.year > other.last_month.year:
+    def __gt__(self, other: MonthRange | datetime | date) -> bool:
+        if isinstance(other, datetime | date):
+            check_year = other.year
+            check_month = other.month
+        else:
+            self._assert_comparable(other)
+            check_year = other.last_month.year
+            check_month = other.last_month.month
+
+        if self.first_month.year > check_year:
             return True
-        if self.last_month.year == other.last_month.year:
-            return self.last_month.month > other.last_month.month
+        if self.first_month.year == check_year:
+            return self.first_month.month > check_month
         return False
 
-    def __add__(self, off: int) -> MonthRange:
-        return self.next(off)
+    def __le__(self, other: MonthRange | datetime | date) -> bool:
+        return other < self or other in self
 
-    def __sub__(self, off: int) -> MonthRange:
-        return self.prev(off)
+    def __ge__(self, other: MonthRange | datetime | date) -> bool:
+        return other > self or other in self
+
+    def __add__(self, offset: int) -> MonthRange:
+        return self.next(offset)
+
+    def __sub__(self, offset: int) -> MonthRange:
+        return self.prev(offset)
 
     def __or__(self, other: MonthRange) -> List[MonthRange]:
         return self.union(other)
@@ -160,7 +211,5 @@ class MonthRange:
     def __and__(self, other: MonthRange) -> MonthRange | None:
         return self.intersect(other)
 
+
 #     todo xor
-
-
-

@@ -1,32 +1,34 @@
 from __future__ import annotations
 
-import datetime
+from datetime import date
 from functools import total_ordering
-from typing import Type, Optional, List
+from typing import List, Any
 
-from .month import Month
-from .time_range import MonthRange
-from .quarter_year import QuarterYear
+from .QuarterYear import QuarterYear
+from .MonthRange import MonthRange
+from .Month import Month
+from .parse_util import parse_year_int
 
 
 @total_ordering
 class Year(MonthRange):
-    __smaller__: Optional[Type[MonthRange]] = QuarterYear
-    _year: int
-
-    def __init__(self, year: int | str | None = None) -> None:
-        super().__init__()
-        if year is None:
-            year = datetime.date.today().year
-        else:
-            try:
-                year = int(year)
-            except ValueError:
-                raise ValueError(f'unable to parse {year} as Year')
+    def __init__(self, year: int) -> None:
         super().__init__(
-            first_month=Month(year=year, month=1),
-            last_month=Month(year=year, month=12),
+            start=Month(year=year, month=1),
+            end=Month(year=year, month=12),
         )
+
+    @classmethod
+    def parse(cls, v: Any, *, simplify: bool = True) -> Year:
+        try:
+            return cls(parse_year_int(v))
+        except Exception:
+            pass
+        cls._abort_parse(v)
+
+    @classmethod
+    def current(cls) -> Year:
+        return cls(date.today().year)
 
     def split(self) -> List[QuarterYear]:
         return [QuarterYear(year=self.year, quarter=q) for q in range(1, 5)]
@@ -38,8 +40,8 @@ class Year(MonthRange):
     def __str__(self) -> str:
         return str(self.year)
 
-    def next(self, off: int = 1) -> Year:
-        return Year(year=self.year + off)
+    def next(self, offset: int = 1) -> Year:
+        return Year(year=self.year + offset)
 
-    def prev(self, off: int = 1) -> Year:
-        return Year(year=self.year - off)
+    def prev(self, offset: int = 1) -> Year:
+        return Year(year=self.year - offset)

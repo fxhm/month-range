@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-import datetime
 import math
+from collections.abc import Mapping
+from datetime import date, datetime
 from functools import total_ordering
-from typing import List
+from typing import List, Any, Self, Sequence
 
 from .MonthRange import MonthRange
+from .parse_util import parse_month_int, parse_year_int
 
 
 @total_ordering
@@ -13,39 +15,68 @@ class Month(MonthRange):
     _year: int
     _month: int
 
-    def __init__(self, year: int = None, month: int = None) -> None:
-        super().__init__(self, self)
-        today = datetime.date.today()
-        self._year = int(year) if year is not None else today.year
-        if month is not None:
-            month = int(month) - 1
-            self._year += math.floor(month / 12)
-            self._month = (month % 12) + 1
-        else:
-            self._month = today.month
+    def __init__(self, year: int, month: int) -> None:
+        month = month - 1
+        self._year = year + math.floor(month / 12)
+        self._month = (month % 12) + 1
+        self._first_month = self
+        self._last_month = self
+        # super().__init__(self, self)
 
-    def __init__(self, number: int) -> None:
-        if 1 <= number <= 12:
-            self.__init__(year=None, month=number)
-            return
-        elif 1900 <= number <= 99999:
-            self.__init__(year=number, month=None)
-            return
-        elif 190001 <= number <= 999999:
-            month = number % 100
-            if 1 <= month <= 12:
-                self.__init__(year=number // 100, month=month)
-                return
-        raise ValueError(f'unable to parse {number} as Month')
-
-
-    def __init__(self, string: str) -> None:
+    @classmethod
+    def parse(cls, v: Any, *, simplify: bool = True) -> Self:
         try:
-            # todo handle more formats
-            vals = string.split('-', maxsplit=1)
-            self.__init__(year=int(vals[0]), month=int(vals[1]))
+            if isinstance(v, date | datetime):
+                return cls(v.year, v.month)
+            if isinstance(v, str):
+                if v.isdigit():
+                    v = int(v)
+                else:
+                    parts = v.split("-")
+                    cls._abort_parse(v, len(parts) != 2)
+                    return cls(parse_year_int(parts[0]), parse_month_int(parts[1]))
+            if isinstance(v, float):
+                v = math.floor(v)
+            if isinstance(v, int):
+                # YYYYMM format
+                if 100001 <= v <= 999912:
+                    month = v % 100
+                    cls._abort_parse(v, month < 1 or month > 12)
+                    return cls(v // 100, month)
+            if isinstance(v, Mapping):
+                return cls(parse_year_int(v), parse_month_int(v))
+            if isinstance(v, Sequence) and len(v) == 2:
+                return cls(parse_year_int(v[0]), parse_month_int(v[1]))
+        except Exception:
+            pass
+        cls._abort_parse(v)
+
+    @classmethod
+    def current(cls) -> Month:
+        today = date.today()
+        return cls(today.year, today.month)
+
+    @classmethod
+    def from_number(cls, value: int | float) -> Month:
+        # Month number (1-12)
+        if 1 <= value <= 12:
+            return cls(date.today().year, value)
+
+        # YYYYMM format
+        elif 100001 <= value <= 999999:
+            month = value % 100
+            if 1 <= month <= 12:
+                return cls(value // 100, month)
+
+        raise ValueError(f"Unable to parse {value} as Month")
+
+    @classmethod
+    def from_string(cls, value: str) -> Month:
+        try:
+            vals = value.split("-", maxsplit=1)
+            return cls(int(vals[0]), int(vals[1]))
         except (ValueError, IndexError):
-            raise ValueError(f'unable to parse {string} as Month')
+            raise ValueError(f"Unable to parse {value} as Month")
 
     @property
     def year(self):
@@ -56,14 +87,13 @@ class Month(MonthRange):
         return self._month
 
     def __str__(self) -> str:
-        return str(self.year) + '-' + str(self.month).zfill(2)
+        return str(self.year) + "-" + str(self.month).zfill(2)
 
-    def next(self, off: int = 1) -> Month:
-        return Month(year=self.year, month=self.month + off)
+    def next(self, offset: int = 1) -> Month:
+        return Month(year=self.year, month=self.month + offset)
 
-    def prev(self, off: int = 1) -> Month:
-        return Month(year=self.year, month=self.month - off)
+    def prev(self, offset: int = 1) -> Month:
+        return Month(year=self.year, month=self.month - offset)
 
     def split(self) -> List[Month]:
         return [self]
-
