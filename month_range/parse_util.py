@@ -64,7 +64,7 @@ def _parse_int(v: Any, keywords: Collection[str], callback: Callable[[Any], int]
         return callback(floor(v))
     elif isinstance(v, Mapping):
         for key in v.keys():
-            if key.lower() in callback:
+            if key.lower() in keywords:
                 return callback(v[key])
     elif isinstance(v, Collection):
         if len(v) == 1:
