@@ -7,14 +7,15 @@ from zoneinfo import ZoneInfo
 
 
 if TYPE_CHECKING:
-    from .year_aligned import YearAlignedMonthRange, Month
+    from .YearAlignedMonthRange import YearAlignedMonthRange
+    from .year_aligned import Month
 
 TIMEZONE_NAME = datetime.now().astimezone().tzname()
 
 
 class MonthRange:
     # resolving circular deps. why do you make me do this python?
-    __sub_types__: Tuple[Type[YearAlignedMonthRange], ...]
+    __aligned_types__: Tuple[Type[YearAlignedMonthRange], ...]
     __month_type__: Type[Month]
 
     _first_month: Month
@@ -42,7 +43,7 @@ class MonthRange:
 
     @classmethod
     def parse(cls, v: Any, *, year_align: bool = True) -> Self:
-        for sub_type in cls.__sub_types__:
+        for sub_type in cls.__aligned_types__:
             try:
                 return sub_type.parse(v)
             except ValueError:

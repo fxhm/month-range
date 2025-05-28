@@ -7,6 +7,7 @@ from typing import Self
 from .MonthRange import MonthRange
 from .month_number import MonthNumber
 
+
 @total_ordering
 class YearAlignedMonthRange(MonthRange, ABC):
     MONTH_COUNT: MonthNumber

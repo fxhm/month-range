@@ -1,3 +1,4 @@
+import math
 from typing import List, Type
 
 from .MonthRange import MonthRange
@@ -67,7 +68,11 @@ def intersect_month_ranges(*month_ranges: MonthRange, year_align: bool = True) -
     return year_align_month_range(intersection) if year_align else intersection
 
 
-def split_month_range(month_range: MonthRange, by: Type[MonthRange] = Month, year_align: bool = True) -> List[MonthRange]:
+def split_month_range(
+    month_range: MonthRange,
+    by: Type[YearAlignedMonthRange] = Month,
+    year_align: bool = True,
+) -> List[MonthRange]:
     result = []
     split_begin: Month = month_range.first_month
     last_month: Month = month_range.last_month
@@ -81,19 +86,17 @@ def split_month_range(month_range: MonthRange, by: Type[MonthRange] = Month, yea
             result.append(MonthRange(split_begin, Month(split_begin.year, 12)))
             split_begin = Month(split_begin.year + 1, 1)
         result.append(MonthRange(split_begin, last_month))
-    # # todo
-    # elif by == QuarterYear:
-    #     # implement this
-    #     off =
-    #     split_end =
-    #     while split_begin.year < last_month.year:
-    #         result.append(MonthRange(split_begin, Month(split_begin.year, 12)))
-    #         split_begin = Month(split_begin.year + 1, 1)
-    #
-    #     result.append(MonthRange(split_begin, month_range.last_month))
-    # elif by == HalfYear:
-    #     # implement this
-    #     result.append(MonthRange(split_begin, month_range.last_month))
     else:
-        raise NotImplementedError(f"Unknown MonthRange type: {by}")
+        split = MonthRange(
+            split_begin,
+            Month(
+                year=split_begin.year,
+                index=math.ceil(split_begin.index / by.MONTH_COUNT) * by.MONTH_COUNT,
+            ),
+        )
+        while last_month not in split:
+            result.append(split)
+            split_begin = split.last_month.next()
+            split = MonthRange(split_begin, split.last_month.next(offset=by.MONTH_COUNT))
+        result.append(MonthRange(split_begin, last_month))
     return list(map(year_align_month_range, result)) if year_align else result

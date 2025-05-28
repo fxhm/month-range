@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping
 from datetime import date, datetime
-from typing import Any, Self, Sequence, Literal
+from typing import Any, Self, Sequence, Literal, Type, List
 
 from ..month_number import MonthNumber
 from ..YearAlignedMonthRange import YearAlignedMonthRange
@@ -77,6 +77,5 @@ class Month(YearAlignedMonthRange):
     def prev(self, offset: int = 1) -> Month:
         return Month(year=self.year, index=self.index - offset)
 
-    # # todo
-    # def split(self, by: Type[YearAlignedMonthRange] = Month, year_align: bool = True) -> List[Month]:
-    #     return [self]
+    def split(self, by: Type[YearAlignedMonthRange] = None, year_align: bool = True) -> List[Month]:
+        return [self]

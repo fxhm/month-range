@@ -84,13 +84,35 @@ def test_year_align():
 
 def test_split():
     mr = MonthRange(Month(2025, 3), Month(2025, 9))
-    assert mr.__class__ == MonthRange
-    assert mr.year_align().__class__ == MonthRange
+    assert QuarterYear(2025, 1).split() == [
+        Month(2025, 1),
+        Month(2025, 2),
+        Month(2025, 3),
+    ]
+    assert HalfYear(2025, 1).split() == [
+        Month(2025, 1),
+        Month(2025, 2),
+        Month(2025, 3),
+        Month(2025, 4),
+        Month(2025, 5),
+        Month(2025, 6),
+    ]
+    assert Year(2025, 1).split() == [*HalfYear(2025, 1).split(), *HalfYear(2025, 2).split()]
 
-    mr = MonthRange(Month(2025, 1), Month(2025, 3))
-    assert mr.__class__ == MonthRange
-    assert mr.year_align().__class__ == QuarterYear
-    assert mr.__class__ == MonthRange
+    mr = MonthRange(Month(2025, 9), Month(2026, 3))
+    assert mr.split() == mr.split(by=Month)
+    assert mr.split(by=Year) == [
+        MonthRange(Month(2025, 9), Month(2025, 12)),
+        MonthRange(Month(2026, 1), Month(2026, 3)),
+    ]
+    assert mr.split(by=HalfYear) == [
+        MonthRange(Month(2025, 9), Month(2025, 12)),
+        MonthRange(Month(2026, 1), Month(2026, 3)),
+    ]
+    assert mr.split(by=QuarterYear) == [
+        Month(2025, 9),
+        MonthRange(Month(2025, 10), Month(2025, 12)),
+        MonthRange(Month(2026, 1), Month(2026, 3)),
+    ]
 
-    assert len(mr | QuarterYear(2025, 2)) == 1
-    assert (mr | QuarterYear(2025, 2))[0] == HalfYear(2025, 1)
+    # assert Year(2025, 1).split(by=HalfYear) == [HalfYear(2025, 1), HalfYear(2025, 2)]
