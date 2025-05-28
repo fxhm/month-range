@@ -1,5 +1,3 @@
-from typing import Literal
-
 import pytest
 
 from month_range import Month, MonthRange, QuarterYear, HalfYear, Year
@@ -15,7 +13,7 @@ def test_parse():
     for v in ["2025-h1", "2025-h01", "2025-half1"]:
         assert MonthRange.parse(v) == HalfYear(2025, 1)
 
-    for v in ["sdfg", "2025-m123"]:
+    for v in ["unknown", "2025-m123"]:
         with pytest.raises(Exception):
             MonthRange.parse(v)
 
@@ -85,7 +83,6 @@ def test_year_align():
 
 
 def test_split():
-    mr = MonthRange(Month(2025, 3), Month(2025, 9))
     assert QuarterYear(2025, 1).split() == [
         Month(2025, 1),
         Month(2025, 2),

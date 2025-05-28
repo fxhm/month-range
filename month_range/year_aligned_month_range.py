@@ -8,6 +8,7 @@ from .month_range import MonthRange
 
 TI = TypeVar("TI", bound=Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 
+
 @total_ordering
 class YearAlignedMonthRange(MonthRange, Generic[TI], ABC):
     MONTH_COUNT: Literal[1, 2, 3, 4, 6, 12]
@@ -33,7 +34,7 @@ class YearAlignedMonthRange(MonthRange, Generic[TI], ABC):
 
     @property
     def index(self) -> TI:
-        return math.ceil(self.first_month.index / self.MONTH_COUNT)
+        return math.ceil(self.first_month.index / self.MONTH_COUNT)  # type: ignore
 
     @classmethod
     def current(cls) -> Self:

@@ -14,13 +14,13 @@ class Month(YearAlignedMonthRange[Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     _year: int
     _index: Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
+    # noinspection PyMissingConstructor
     def __init__(self, year: int, index: int) -> None:
         index = index - 1
         self._year = year + math.floor(index / 12)
-        self._index = (index % 12) + 1
+        self._index = (index % 12) + 1   # type: ignore
         self._first_month = self
         self._last_month = self
-        # super().__init__(self, self)
 
     @classmethod
     def parse(cls, v: Any, *, year_align: bool = True) -> Self:

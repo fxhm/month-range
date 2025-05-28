@@ -15,7 +15,7 @@ def parse_month_int(v: Any) -> int:
     return _parse_int(v, MONTH_KEYWORDS, parse_month_int)
 
 
-QUARTER_KEYWORDS = ["quarter", "quartal", "quart", "q"]
+QUARTER_KEYWORDS = ["quarter", "quart", "q"]
 
 
 def parse_quarter_int(v: Any) -> int:

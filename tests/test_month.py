@@ -47,7 +47,7 @@ def test_parse():
         assert month.year == 2025
         assert month.index == 1
 
-    for v in [202500, "202500", "sdfg", "2025-m123"]:
+    for v in [202500, "202500", "unknown", "2025-m123"]:
         with pytest.raises(Exception):
             Month.parse(v)
 

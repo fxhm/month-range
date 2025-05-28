@@ -85,10 +85,6 @@ class MonthRange:
         return 13 - first_month.index + last_month.index + 12 * (last_month.year - first_month.year - 1)
 
     @property
-    def months(self) -> List[Month]:
-        return self.split()
-
-    @property
     def first_month(self) -> Month:
         return self._first_month
 
@@ -199,64 +195,44 @@ class MonthRange:
         self._assert_comparable(other)
         return other.first_month >= self.first_month and other.last_month <= self.last_month
 
-    def __lt__(self, other: MonthRange | datetime | date) -> bool:
+    def _get_check_range(self, other: MonthRange | datetime | date) -> MonthRange:
         if isinstance(other, datetime | date):
-            check_year = other.year
-            check_month = other.month
+            return self.__month_type__(other.year, other.month)
         else:
             self._assert_comparable(other)
-            check_year = other.first_month.year
-            check_month = other.first_month.index
+            return other
 
-        if self.last_month.year < check_year:
+
+    def __lt__(self, other: MonthRange | datetime | date) -> bool:
+        check_month = self._get_check_range(other).first_month
+        if self.last_month.year < check_month.year:
             return True
-        if self.last_month.year == check_year:
-            return self.last_month.index < check_month
+        if self.last_month.year == check_month.year:
+            return self.last_month.index < check_month.index
         return False
 
     def __gt__(self, other: MonthRange | datetime | date) -> bool:
-        if isinstance(other, datetime | date):
-            check_year = other.year
-            check_month = other.month
-        else:
-            self._assert_comparable(other)
-            check_year = other.last_month.year
-            check_month = other.last_month.index
-
-        if self.first_month.year > check_year:
+        check_month = self._get_check_range(other).last_month
+        if self.first_month.year > check_month.year:
             return True
-        if self.first_month.year == check_year:
-            return self.first_month.index > check_month
+        if self.first_month.year == check_month.year:
+            return self.first_month.index > check_month.index
         return False
 
     def __le__(self, other: MonthRange | datetime | date) -> bool:
-        if isinstance(other, datetime | date):
-            check_year = other.year
-            check_month = other.month
-        else:
-            self._assert_comparable(other)
-            check_year = other.first_month.year
-            check_month = other.first_month.index
-
-        if self.last_month.year < check_year:
+        check_month = self._get_check_range(other).first_month
+        if self.last_month.year < check_month.year:
             return True
-        if self.last_month.year == check_year:
-            return self.last_month.index <= check_month
+        if self.last_month.year == check_month.year:
+            return self.last_month.index <= check_month.index
         return False
 
     def __ge__(self, other: MonthRange | datetime | date) -> bool:
-        if isinstance(other, datetime | date):
-            check_year = other.year
-            check_month = other.month
-        else:
-            self._assert_comparable(other)
-            check_year = other.last_month.year
-            check_month = other.last_month.index
-
-        if self.first_month.year > check_year:
+        check_month = self._get_check_range(other).last_month
+        if self.first_month.year > check_month.year:
             return True
-        if self.first_month.year == check_year:
-            return self.first_month.index >= check_month
+        if self.first_month.year == check_month.year:
+            return self.first_month.index >= check_month.index
         return False
 
     def __add__(self, offset: int) -> MonthRange:
