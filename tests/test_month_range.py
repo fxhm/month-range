@@ -32,6 +32,7 @@ def test_set_ops():
     assert Month(2025, 1).union(Month(2025, 2), Month(2025, 3), simplify=True)[0].__class__ == QuarterYear
     assert Month(2025, 1).union(Month(2025, 2), Month(2025, 3), simplify=False)[0].__class__ == MonthRange
 
+
 def test_contains():
     assert Month(2025, 1) in Month(2025, 1)
     assert Month(2025, 1) in MonthRange(Month(2025, 1), Month(2025, 1))
@@ -66,6 +67,7 @@ def test_contains():
 
     assert Year(2025) in Year(2025)
 
+
 def test_simplify():
     mr = MonthRange(Month(2025, 3), Month(2025, 9))
     assert mr.__class__ == MonthRange
@@ -79,3 +81,16 @@ def test_simplify():
     assert len(mr | QuarterYear(2025, 2)) == 1
     assert (mr | QuarterYear(2025, 2))[0] == HalfYear(2025, 1)
 
+
+def test_split():
+    mr = MonthRange(Month(2025, 3), Month(2025, 9))
+    assert mr.__class__ == MonthRange
+    assert mr.simplify().__class__ == MonthRange
+
+    mr = MonthRange(Month(2025, 1), Month(2025, 3))
+    assert mr.__class__ == MonthRange
+    assert mr.simplify().__class__ == QuarterYear
+    assert mr.__class__ == MonthRange
+
+    assert len(mr | QuarterYear(2025, 2)) == 1
+    assert (mr | QuarterYear(2025, 2))[0] == HalfYear(2025, 1)

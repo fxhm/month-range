@@ -4,21 +4,23 @@ import math
 from collections.abc import Mapping
 from datetime import date, datetime
 from functools import total_ordering
-from typing import List, Any, Self, Sequence
+from typing import Any, Self, Sequence, Literal
 
-from .MonthRange import MonthRange
+from .YearAlignedMonthRange import YearAlignedMonthRange
+from .month_number import MonthNumber
 from .parse_util import parse_month_int, parse_year_int
 
 
 @total_ordering
-class Month(MonthRange):
+class Month(YearAlignedMonthRange):
+    MONTH_COUNT: Literal[1] = 1
     _year: int
-    _month: int
+    _index: MonthNumber
 
-    def __init__(self, year: int, month: int) -> None:
-        month = month - 1
-        self._year = year + math.floor(month / 12)
-        self._month = (month % 12) + 1
+    def __init__(self, year: int, index: int) -> None:
+        index = index - 1
+        self._year = year + math.floor(index / 12)
+        self._index = (index % 12) + 1
         self._first_month = self
         self._last_month = self
         # super().__init__(self, self)
@@ -33,7 +35,8 @@ class Month(MonthRange):
                     v = int(v)
                 else:
                     parts = v.split("-")
-                    cls._abort_parse(v, len(parts) != 2)
+                    if len(parts) != 2:
+                        cls._abort_parse(v)
                     return cls(parse_year_int(parts[0]), parse_month_int(parts[1]))
             if isinstance(v, float):
                 v = math.floor(v)
@@ -41,7 +44,8 @@ class Month(MonthRange):
                 # YYYYMM format
                 if 100001 <= v <= 999912:
                     month = v % 100
-                    cls._abort_parse(v, month < 1 or month > 12)
+                    if month < 1 or month > 12:
+                        cls._abort_parse(v)
                     return cls(v // 100, month)
             if isinstance(v, Mapping):
                 return cls(parse_year_int(v), parse_month_int(v))
@@ -51,27 +55,30 @@ class Month(MonthRange):
             pass
         cls._abort_parse(v)
 
+    def __str__(self) -> str:
+        return str(self.year) + "-" + str(self.index).zfill(2)
+
+    # the following methods rely on "Month" in superclasses and have to be redefined here to avoid infinite recursion
+    @property
+    def year(self) -> int:
+        return self._year
+
+    @property
+    def index(self) -> MonthNumber:
+        return self._index
+
+    # the following methods are redefined here for performance reasons
     @classmethod
     def current(cls) -> Month:
         today = date.today()
         return cls(today.year, today.month)
 
-    @property
-    def year(self):
-        return self._year
-
-    @property
-    def month(self):
-        return self._month
-
-    def __str__(self) -> str:
-        return str(self.year) + "-" + str(self.month).zfill(2)
-
     def next(self, offset: int = 1) -> Month:
-        return Month(year=self.year, month=self.month + offset)
+        return Month(year=self.year, index=self.index + offset)
 
     def prev(self, offset: int = 1) -> Month:
-        return Month(year=self.year, month=self.month - offset)
+        return Month(year=self.year, index=self.index - offset)
 
-    def split(self) -> List[Month]:
-        return [self]
+    # # todo
+    # def split(self, by: Type[YearAlignedMonthRange] = Month, simplify: bool = True) -> List[Month]:
+    #     return [self]

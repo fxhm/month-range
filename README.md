@@ -21,7 +21,6 @@ pip install month-range
 ```
 
 ## Features
-
 - Create and manipulate month ranges easily
 - Represent individual months, quarters, half-years, and full years
 - Handle date arithmetic (add/subtract months, compare ranges)
@@ -72,10 +71,11 @@ if MonthRange(Month(2025, 1), Month(2025, 3)) == QuarterYear(2025, 1):
 ## Class Hierarchy
 
 - `MonthRange`: Base class for all date ranges
-  - `Month`: Represents a single month
-  - `QuarterYear`: Represents a fiscal quarter (3 months)
-  - `HalfYear`: Represents half a year (6 months)
-  - `Year`: Represents a full calendar year (12 months)
+  - `YearAlignedMonthRange`: Base class for all date ranges that are aligned to a calendar year
+    - `Month`: Represents a single month
+    - `QuarterYear`: Represents a fiscal quarter (3 months)
+    - `HalfYear`: Represents half a year (6 months)
+    - `Year`: Represents a full calendar year (12 months)
 
 ## Advanced Usage
 
@@ -106,8 +106,8 @@ if q3 in fiscal_year:
 month = Month.current()  # Current month
 month = Month(2025, 4)  # From year and month
 
-month.year == 2025 # year as int
-month.month == 4 # month as int from 1 to 12
+month.year == 2025  # year as int
+month.index == 4  # month as int from 1 to 12
 
 str(month) == "2025-04"
 ```
@@ -131,7 +131,7 @@ simplified = range.simplify()  # Convert to most specific type
 next_range = range.next()  # Move range forward by its own length
 prev_range = range.prev(2)  # Move range backward by twice its length
 has_overlap = range.overlaps(other_range)  # Check for overlap
-is_following = range.follows_directly(other_range)  # Check adjacency
+is_following = range.directly_after(other_range)  # Check adjacency
 intersection = range.intersect(other_range)  # Get intersection
 unions = range.union(other_range1, other_range2)  # Get union
 ```

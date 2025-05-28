@@ -2,17 +2,21 @@ from __future__ import annotations
 
 from calendar import monthrange
 from datetime import date, datetime
-from typing import TYPE_CHECKING, List, Any, Mapping, Tuple, Type, Self, Sequence
+from typing import TYPE_CHECKING, List, Any, Mapping, Tuple, Type, Self, Sequence, Never
 from zoneinfo import ZoneInfo
 
+
 if TYPE_CHECKING:
+    from .YearAlignedMonthRange import YearAlignedMonthRange
     from .Month import Month
 
 TIMEZONE_NAME = datetime.now().astimezone().tzname()
 
+
 class MonthRange:
     # resolving circular deps. why do you make me do this python?
-    __sub_types__: Tuple[Type[MonthRange], ...]
+    __sub_types__: Tuple[Type[YearAlignedMonthRange], ...]
+    __month_type__: Type[Month]
 
     _first_month: Month
     _last_month: Month
@@ -34,9 +38,8 @@ class MonthRange:
             raise ValueError("first_month after last_month")
 
     @classmethod
-    def _abort_parse(cls, v: Any, condition: bool = True) -> None:
-        if condition:
-            raise ValueError(f"unable to parse {v} as {cls.__name__}")
+    def _abort_parse(cls, v: Any) -> Never:
+        raise ValueError(f"unable to parse {v} as {cls.__name__}")
 
     @classmethod
     def parse(cls, v: Any, *, simplify: bool = True) -> Self:
@@ -52,14 +55,16 @@ class MonthRange:
                 if key.lower() in ["start", "from", "min", "begin", "first"]:
                     start = cls.parse(v[key])
                     break
-            cls._abort_parse(v, start is None)
+            if start is None:
+                cls._abort_parse(v)
 
             end = None
             for key in v.keys():
                 if key.lower() in ["end", "to", "max", "until", "last"]:
                     end = cls.parse(v[key])
                     break
-            cls._abort_parse(v, end is None)
+            if end is None:
+                cls._abort_parse(v)
 
             result = MonthRange(start=start, end=end)
             return result.simplify() if simplify else result
@@ -76,21 +81,12 @@ class MonthRange:
         first_month = self.first_month
         last_month = self.last_month
         if first_month.year == last_month.year:
-            return last_month.month - first_month.month + 1
-        return 13 - first_month.month + last_month.month + 12 * (last_month.year - first_month.year - 1)
+            return last_month.index - first_month.index + 1
+        return 13 - first_month.index + last_month.index + 12 * (last_month.year - first_month.year - 1)
 
     @property
     def months(self) -> List[Month]:
-        month = self.first_month
-        last_month = self.last_month
-        months = []
-        while month <= last_month:
-            months.append(month)
-            month = month.next()
-        return months
-
-    def split(self) -> List[MonthRange]:
-        return self.months
+        return self.split()
 
     @property
     def first_month(self) -> Month:
@@ -102,14 +98,14 @@ class MonthRange:
 
     @property
     def first_day(self) -> date:
-        return date(self.last_month.year, self.last_month.month, 1)
+        return date(self.last_month.year, self.last_month.index, 1)
 
     @property
     def last_day(self) -> date:
         return date(
             self.last_month.year,
-            self.last_month.month,
-            monthrange(self.last_month.year, self.last_month.month)[1],
+            self.last_month.index,
+            monthrange(self.last_month.year, self.last_month.index)[1],
         )
 
     @property
@@ -144,17 +140,25 @@ class MonthRange:
             or self.last_month in other
         )
 
-    def follows_directly(self, other: MonthRange) -> bool:
+    def adjacent_to(self, other: MonthRange) -> bool:
+        return self.directly_after(other) or self.directly_before(other)
+
+    def directly_after(self, other: MonthRange) -> bool:
         return self.first_month.prev() == other.last_month
 
-    def simplify(self) -> MonthRange:
-        ...
+    def directly_before(self, other: MonthRange) -> bool:
+        return self.last_month.next() == other.first_month
 
-    def union(self, *others: MonthRange, simplify: bool = True) -> List[MonthRange]:
-        ...
+    def touches(self, other: MonthRange) -> bool:
+        return self.overlaps(other) or self.adjacent_to(other)
 
-    def intersect(self, *others: MonthRange, simplify: bool = True) -> MonthRange | None:
-        ...
+    def simplify(self) -> MonthRange: ...
+
+    def union(self, *others: MonthRange, simplify: bool = True) -> List[MonthRange]: ...
+
+    def intersect(self, *others: MonthRange, simplify: bool = True) -> MonthRange | None: ...
+
+    def split(self, by: Type[YearAlignedMonthRange] = ..., simplify: bool = True) -> List[MonthRange]: ...
 
     def _assert_comparable(self, other: Any) -> None:
         if not isinstance(other, MonthRange):
@@ -167,17 +171,18 @@ class MonthRange:
         return f"{self.first_month} ↔ {self.last_month}"
 
     def __hash__(self):
-        return hash((self.first_month.year, self.first_month.month, self.last_month.year, self.last_month.month))
+        return hash((self.first_month.year, self.first_month.index, self.last_month.year, self.last_month.index))
 
     def __len__(self) -> int:
         return self.month_count
 
     def __eq__(self, other: MonthRange) -> bool:
         self._assert_comparable(other)
-        return (
-            (self.first_month.year, self.first_month.month, self.last_month.year, self.last_month.month)
-            ==
-            (other.first_month.year, other.first_month.month, other.last_month.year, other.last_month.month)
+        return (self.first_month.year, self.first_month.index, self.last_month.year, self.last_month.index) == (
+            other.first_month.year,
+            other.first_month.index,
+            other.last_month.year,
+            other.last_month.index,
         )
 
     def __contains__(self, other: MonthRange | datetime | date) -> bool:
@@ -186,9 +191,9 @@ class MonthRange:
             last_month = self.last_month
             if other.year < first_month.year or other.year > last_month.year:
                 return False
-            if other.year == first_month.year and other.month < first_month.month:
+            if other.year == first_month.year and other.month < first_month.index:
                 return False
-            if other.year == last_month.year and other.month > first_month.month:
+            if other.year == last_month.year and other.month > first_month.index:
                 return False
             return True
         self._assert_comparable(other)
@@ -201,12 +206,12 @@ class MonthRange:
         else:
             self._assert_comparable(other)
             check_year = other.first_month.year
-            check_month = other.first_month.month
+            check_month = other.first_month.index
 
         if self.last_month.year < check_year:
             return True
         if self.last_month.year == check_year:
-            return self.last_month.month < check_month
+            return self.last_month.index < check_month
         return False
 
     def __gt__(self, other: MonthRange | datetime | date) -> bool:
@@ -216,12 +221,12 @@ class MonthRange:
         else:
             self._assert_comparable(other)
             check_year = other.last_month.year
-            check_month = other.last_month.month
+            check_month = other.last_month.index
 
         if self.first_month.year > check_year:
             return True
         if self.first_month.year == check_year:
-            return self.first_month.month > check_month
+            return self.first_month.index > check_month
         return False
 
     def __le__(self, other: MonthRange | datetime | date) -> bool:
@@ -231,12 +236,12 @@ class MonthRange:
         else:
             self._assert_comparable(other)
             check_year = other.first_month.year
-            check_month = other.first_month.month
+            check_month = other.first_month.index
 
         if self.last_month.year < check_year:
             return True
         if self.last_month.year == check_year:
-            return self.last_month.month <= check_month
+            return self.last_month.index <= check_month
         return False
 
     def __ge__(self, other: MonthRange | datetime | date) -> bool:
@@ -246,12 +251,12 @@ class MonthRange:
         else:
             self._assert_comparable(other)
             check_year = other.last_month.year
-            check_month = other.last_month.month
+            check_month = other.last_month.index
 
         if self.first_month.year > check_year:
             return True
         if self.first_month.year == check_year:
-            return self.first_month.month >= check_month
+            return self.first_month.index >= check_month
         return False
 
     def __add__(self, offset: int) -> MonthRange:
