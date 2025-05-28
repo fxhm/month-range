@@ -1,20 +1,23 @@
 from __future__ import annotations
 
-from datetime import date
-from typing import Any, Literal
+from datetime import date, datetime
+from typing import Any, Literal, Tuple
 
 from ..year_aligned_month_range import YearAlignedMonthRange
-from .parse_util import parse_year_int
+from ..parse_util import parse_year_int, YEAR_SERIALIZATION_KEYS
 
 
 class Year(YearAlignedMonthRange[Literal[1]]):
     MONTH_COUNT: Literal[12] = 12
+    SERIALIZATION_KEYS: Tuple[str, ...] = YEAR_SERIALIZATION_KEYS
 
     def __init__(self, year: int, index: int = 1) -> None:
         super().__init__(year=year, index=index)
 
     @classmethod
     def parse(cls, v: Any, *, year_align: bool = True) -> Year:
+        if isinstance(v, date | datetime):
+            return cls(v.year)
         try:
             return cls(parse_year_int(v))
         except Exception:

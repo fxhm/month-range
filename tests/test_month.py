@@ -123,10 +123,6 @@ def test_current():
     assert today in Month.current()
 
 
-def test_str():
-    assert str(Month(2025, 1)) == "2025-01"
-
-
 def test_comparison():
     assert Month(2025, 1) == Month(2025, 1)
     assert Month(2025, 1) <= Month(2025, 1)

@@ -115,3 +115,10 @@ def test_split():
     ]
 
     assert Year(2025).split(by=HalfYear) == [HalfYear(2025, 1), HalfYear(2025, 2)]
+
+
+def test_str():
+    assert str(Month(2025, 1)) == "2025-01"
+    assert str(Year(2025)) == "2025"
+    assert str(QuarterYear(2025, 1)) == "2025-q1"
+    assert str(HalfYear(2025, 1)) == "2025-h1"
