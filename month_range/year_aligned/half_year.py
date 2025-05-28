@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import Literal, Tuple
 
 from ..year_aligned_month_range import YearAlignedMonthRange

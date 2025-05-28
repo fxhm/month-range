@@ -1,6 +1,6 @@
 import pytest
 
-from month_range import Month, MonthRange, QuarterYear, HalfYear, Year
+from month_range import Month, MonthRange, QuarterYear, HalfYear, Year, Quadrimester
 
 
 def test_parse():
@@ -9,6 +9,9 @@ def test_parse():
 
     for v in ["2025-q1", "2025-q01", "2025-quarter1"]:
         assert MonthRange.parse(v) == QuarterYear(2025, 1)
+
+    for v in ["2025-t1", "2025-t01", "2025-tri1"]:
+        assert MonthRange.parse(v) == Quadrimester(2025, 1)
 
     for v in ["2025-h1", "2025-h01", "2025-half1"]:
         assert MonthRange.parse(v) == HalfYear(2025, 1)
@@ -121,4 +124,5 @@ def test_str():
     assert str(Month(2025, 1)) == "2025-01"
     assert str(Year(2025)) == "2025"
     assert str(QuarterYear(2025, 1)) == "2025-q1"
+    assert str(Quadrimester(2025, 1)) == "2025-t1"
     assert str(HalfYear(2025, 1)) == "2025-h1"
