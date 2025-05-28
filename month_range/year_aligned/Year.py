@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 from datetime import date
-from functools import total_ordering
 from typing import Any, Literal
 
-from .YearAlignedMonthRange import YearAlignedMonthRange
+from ..YearAlignedMonthRange import YearAlignedMonthRange
 from .parse_util import parse_year_int
 
 
-@total_ordering
 class Year(YearAlignedMonthRange):
     MONTH_COUNT: Literal[12] = 12
 

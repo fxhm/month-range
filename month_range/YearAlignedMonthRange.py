@@ -1,12 +1,13 @@
 import math
 from abc import ABC
 from datetime import date
+from functools import total_ordering
 from typing import Self
 
 from .MonthRange import MonthRange
 from .month_number import MonthNumber
 
-
+@total_ordering
 class YearAlignedMonthRange(MonthRange, ABC):
     MONTH_COUNT: MonthNumber
 

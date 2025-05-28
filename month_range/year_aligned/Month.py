@@ -3,15 +3,13 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping
 from datetime import date, datetime
-from functools import total_ordering
 from typing import Any, Self, Sequence, Literal
 
-from .YearAlignedMonthRange import YearAlignedMonthRange
-from .month_number import MonthNumber
+from ..month_number import MonthNumber
+from ..YearAlignedMonthRange import YearAlignedMonthRange
 from .parse_util import parse_month_int, parse_year_int
 
 
-@total_ordering
 class Month(YearAlignedMonthRange):
     MONTH_COUNT: Literal[1] = 1
     _year: int

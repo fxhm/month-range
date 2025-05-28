@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import math
 from datetime import date, datetime
-from functools import total_ordering
 from typing import Literal, Any, Self, Mapping, Sequence
 
-from .YearAlignedMonthRange import YearAlignedMonthRange
+from ..YearAlignedMonthRange import YearAlignedMonthRange
 from .parse_util import parse_year_int, parse_half_int
 
 
-@total_ordering
 class HalfYear(YearAlignedMonthRange):
     MONTH_COUNT: Literal[6] = 6
 

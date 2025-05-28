@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import math
 from datetime import date, datetime
-from functools import total_ordering
 from typing import Literal, Any, Self, Sequence, Mapping
 
-from .YearAlignedMonthRange import YearAlignedMonthRange
+from ..YearAlignedMonthRange import YearAlignedMonthRange
 from .parse_util import parse_quarter_int, parse_year_int
 
 
-@total_ordering
 class QuarterYear(YearAlignedMonthRange):
     MONTH_COUNT: Literal[3] = 3
 
