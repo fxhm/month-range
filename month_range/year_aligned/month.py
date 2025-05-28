@@ -18,7 +18,7 @@ class Month(YearAlignedMonthRange[Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     def __init__(self, year: int, index: int) -> None:
         index = index - 1
         self._year = year + math.floor(index / 12)
-        self._index = (index % 12) + 1   # type: ignore
+        self._index = (index % 12) + 1  # type: ignore
         self._first_month = self
         self._last_month = self
 
@@ -55,7 +55,7 @@ class Month(YearAlignedMonthRange[Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     def __str__(self) -> str:
         return str(self.year) + "-" + str(self.index).zfill(2)
 
-    # the following methods rely on "Month" in superclasses and have to be redefined here to avoid infinite recursion
+    # the following methods rely on first_month in superclasses and have to be redefined here to avoid infinite recursion
     @property
     def year(self) -> int:
         return self._year

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from calendar import monthrange
 from datetime import date, datetime
-from typing import TYPE_CHECKING, List, Any, Mapping, Tuple, Type, Self, Sequence, Never
+from operator import methodcaller
+from typing import TYPE_CHECKING, List, Any, Mapping, Tuple, Type, Sequence, Never, TypeVar
 from zoneinfo import ZoneInfo
 
 
@@ -12,11 +13,13 @@ if TYPE_CHECKING:
 
 TIMEZONE_NAME = datetime.now().astimezone().tzname()
 
+TS = TypeVar("TS", bound="MonthRange")
+
 
 class MonthRange:
     # circular deps. those are resolved in the __init__.py
-    __aligned_types__: Tuple[Type[YearAlignedMonthRange], ...]
-    __month_type__: Type[Month]
+    __atomic_type__: Type[Month]
+    __year_aligned_types__: Tuple[Type[YearAlignedMonthRange], ...]
 
     _first_month: Month
     _last_month: Month
@@ -44,8 +47,10 @@ class MonthRange:
     @classmethod
     def parse(cls, v: Any, *, year_align: bool = True) -> Self:
         for sub_type in cls.__aligned_types__:
+    def parse(cls: Type[TS], v: Any, *, year_align: bool = True) -> TS:
+        for aligned_type in cls.__year_aligned_types__:
             try:
-                return sub_type.parse(v)
+                return aligned_type.parse(v)
             except ValueError:
                 pass
 
@@ -197,11 +202,10 @@ class MonthRange:
 
     def _get_check_range(self, other: MonthRange | datetime | date) -> MonthRange:
         if isinstance(other, datetime | date):
-            return self.__month_type__(other.year, other.month)
+            return self.__atomic_type__(other.year, other.month)
         else:
             self._assert_comparable(other)
             return other
-
 
     def __lt__(self, other: MonthRange | datetime | date) -> bool:
         check_month = self._get_check_range(other).first_month

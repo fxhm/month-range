@@ -114,4 +114,4 @@ def test_split():
         MonthRange(Month(2026, 1), Month(2026, 3)),
     ]
 
-    assert Year(2025, 1).split(by=HalfYear) == [HalfYear(2025, 1), HalfYear(2025, 2)]
+    assert Year(2025).split(by=HalfYear) == [HalfYear(2025, 1), HalfYear(2025, 2)]

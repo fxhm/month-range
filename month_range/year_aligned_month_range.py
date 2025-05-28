@@ -2,11 +2,12 @@ import math
 from abc import ABC
 from datetime import date
 from functools import total_ordering
-from typing import Self, Generic, TypeVar, Literal
+from typing import Generic, TypeVar, Literal, Type
 
 from .month_range import MonthRange
 
 TI = TypeVar("TI", bound=Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+TS = TypeVar("TS", bound="YearAlignedMonthRange")
 
 
 @total_ordering
@@ -20,13 +21,9 @@ class YearAlignedMonthRange(MonthRange, Generic[TI], ABC):
         year += math.floor(index / year_divider)
         index = index % year_divider
         super().__init__(
-            start=MonthRange.__month_type__(year=year, index=self.MONTH_COUNT * index + 1),
-            end=MonthRange.__month_type__(year=year, index=self.MONTH_COUNT * index + self.MONTH_COUNT),
+            start=MonthRange.__atomic_type__(year=year, index=self.MONTH_COUNT * index + 1),
+            end=MonthRange.__atomic_type__(year=year, index=self.MONTH_COUNT * index + self.MONTH_COUNT),
         )
-
-    @property
-    def month_count(self) -> int:
-        return self.MONTH_COUNT
 
     @property
     def year(self) -> int:
@@ -37,12 +34,20 @@ class YearAlignedMonthRange(MonthRange, Generic[TI], ABC):
         return math.ceil(self.first_month.index / self.MONTH_COUNT)  # type: ignore
 
     @classmethod
-    def current(cls) -> Self:
+    def current(cls: Type[TS]) -> TS:
         today = date.today()
         return cls(year=today.year, index=math.ceil(today.month / cls.MONTH_COUNT))
 
-    def next(self, offset: int = 1) -> Self:
-        return self.__class__(year=self.year, index=self.index + offset)
+    # the following methods are redefined here for performance reasons
+    @property
+    def month_count(self) -> int:
+        return self.MONTH_COUNT
 
-    def prev(self, offset: int = 1) -> Self:
-        return self.__class__(year=self.year, index=self.index - offset)
+    def year_align(self: TS) -> TS:
+        return self
+
+    def next(self: TS, offset: int = 1) -> TS:
+        return self.__class__(year=self.year, index=self.index + offset)  # type: ignore
+
+    def prev(self: TS, offset: int = 1) -> TS:
+        return self.__class__(year=self.year, index=self.index - offset)  # type: ignore
