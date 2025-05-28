@@ -5,7 +5,7 @@ from .YearAlignedMonthRange import YearAlignedMonthRange
 from .year_aligned import Month, QuarterYear, HalfYear, Year
 
 
-def simplify_month_range(month_range: MonthRange) -> MonthRange:
+def year_align_month_range(month_range: MonthRange) -> MonthRange:
     if isinstance(month_range, YearAlignedMonthRange):
         return month_range
     # todo use YearAlignedMonthRange attributes
@@ -33,7 +33,7 @@ def simplify_month_range(month_range: MonthRange) -> MonthRange:
     return month_range
 
 
-def union_month_ranges(*month_ranges: MonthRange, simplify: bool = True) -> List[MonthRange]:
+def union_month_ranges(*month_ranges: MonthRange, year_align: bool = True) -> List[MonthRange]:
     if len(month_ranges) == 0:
         return []
     result = []
@@ -49,10 +49,10 @@ def union_month_ranges(*month_ranges: MonthRange, simplify: bool = True) -> List
             result.append(prev)
             prev = month_range
     result.append(prev)
-    return list(map(simplify_month_range, result)) if simplify else result
+    return list(map(year_align_month_range, result)) if year_align else result
 
 
-def intersect_month_ranges(*month_ranges: MonthRange, simplify: bool = True) -> MonthRange | None:
+def intersect_month_ranges(*month_ranges: MonthRange, year_align: bool = True) -> MonthRange | None:
     if len(month_ranges) == 0:
         return None
     intersection = month_ranges[0]
@@ -64,10 +64,10 @@ def intersect_month_ranges(*month_ranges: MonthRange, simplify: bool = True) -> 
             )
         else:
             return None
-    return simplify_month_range(intersection) if simplify else intersection
+    return year_align_month_range(intersection) if year_align else intersection
 
 
-def split_month_range(month_range: MonthRange, by: Type[MonthRange] = Month, simplify: bool = True) -> List[MonthRange]:
+def split_month_range(month_range: MonthRange, by: Type[MonthRange] = Month, year_align: bool = True) -> List[MonthRange]:
     result = []
     split_begin: Month = month_range.first_month
     last_month: Month = month_range.last_month
@@ -96,4 +96,4 @@ def split_month_range(month_range: MonthRange, by: Type[MonthRange] = Month, sim
     #     result.append(MonthRange(split_begin, month_range.last_month))
     else:
         raise NotImplementedError(f"Unknown MonthRange type: {by}")
-    return list(map(simplify_month_range, result)) if simplify else result
+    return list(map(year_align_month_range, result)) if year_align else result

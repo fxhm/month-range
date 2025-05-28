@@ -45,8 +45,8 @@ fiscal_year = MonthRange(Month(2023, 4), Month(2024, 3))
 
 # Check if ranges overlap
 if q1_2023.overlaps(fiscal_year):
-    print("Ranges overlap")
-    
+  print("Ranges overlap")
+
 # Get intersection
 overlap = q1_2023 & fiscal_year  # Using operator
 # or
@@ -56,7 +56,7 @@ overlap = q1_2023.intersect(fiscal_year)  # Using method
 months = fiscal_year.months  # Returns a list of Month objects
 
 # Simplify standard periods
-quarter = MonthRange(Month(2025, 1), Month(2025, 3)).simplify()  # Returns a QuarterYear
+quarter = MonthRange(Month(2025, 1), Month(2025, 3)).year_align()  # Returns a QuarterYear
 print(isinstance(quarter, QuarterYear))  # True
 
 # Move ranges forward or backward
@@ -65,7 +65,7 @@ previous_quarter = q1_2023 - 1  # Q4 2022
 
 # Compare ranges
 if MonthRange(Month(2025, 1), Month(2025, 3)) == QuarterYear(2025, 1):
-    print("These are the same period")
+  print("These are the same period")
 ```
 
 ## Class Hierarchy
@@ -127,7 +127,7 @@ count = range.month_count  # Number of months in range
 all_months = range.months  # List of all Month objects in range
 
 # Methods
-simplified = range.simplify()  # Convert to most specific type
+simplified = range.year_align()  # Convert to most specific type
 next_range = range.next()  # Move range forward by its own length
 prev_range = range.prev(2)  # Move range backward by twice its length
 has_overlap = range.overlaps(other_range)  # Check for overlap

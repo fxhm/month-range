@@ -12,7 +12,7 @@ class QuarterYear(YearAlignedMonthRange):
     MONTH_COUNT: Literal[3] = 3
 
     @classmethod
-    def parse(cls, v: Any, *, simplify: bool = True) -> Self:
+    def parse(cls, v: Any, *, year_align: bool = True) -> Self:
         try:
             if isinstance(v, date | datetime):
                 return cls(v.year, math.ceil(v.month / 3))

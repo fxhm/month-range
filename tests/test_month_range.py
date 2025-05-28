@@ -29,8 +29,8 @@ def test_set_ops():
     assert Month(2025, 1) | Month(2025, 2) == [MonthRange(Month(2025, 1), Month(2025, 2))]
     assert Month(2025, 1) | Month(2025, 3) == [Month(2025, 1), Month(2025, 3)]
     assert Month(2025, 1).union(Month(2025, 2), Month(2025, 3)) == [QuarterYear(2025, 1)]
-    assert Month(2025, 1).union(Month(2025, 2), Month(2025, 3), simplify=True)[0].__class__ == QuarterYear
-    assert Month(2025, 1).union(Month(2025, 2), Month(2025, 3), simplify=False)[0].__class__ == MonthRange
+    assert Month(2025, 1).union(Month(2025, 2), Month(2025, 3), year_align=True)[0].__class__ == QuarterYear
+    assert Month(2025, 1).union(Month(2025, 2), Month(2025, 3), year_align=False)[0].__class__ == MonthRange
 
 
 def test_contains():
@@ -68,14 +68,14 @@ def test_contains():
     assert Year(2025) in Year(2025)
 
 
-def test_simplify():
+def test_year_align():
     mr = MonthRange(Month(2025, 3), Month(2025, 9))
     assert mr.__class__ == MonthRange
-    assert mr.simplify().__class__ == MonthRange
+    assert mr.year_align().__class__ == MonthRange
 
     mr = MonthRange(Month(2025, 1), Month(2025, 3))
     assert mr.__class__ == MonthRange
-    assert mr.simplify().__class__ == QuarterYear
+    assert mr.year_align().__class__ == QuarterYear
     assert mr.__class__ == MonthRange
 
     assert len(mr | QuarterYear(2025, 2)) == 1
@@ -85,11 +85,11 @@ def test_simplify():
 def test_split():
     mr = MonthRange(Month(2025, 3), Month(2025, 9))
     assert mr.__class__ == MonthRange
-    assert mr.simplify().__class__ == MonthRange
+    assert mr.year_align().__class__ == MonthRange
 
     mr = MonthRange(Month(2025, 1), Month(2025, 3))
     assert mr.__class__ == MonthRange
-    assert mr.simplify().__class__ == QuarterYear
+    assert mr.year_align().__class__ == QuarterYear
     assert mr.__class__ == MonthRange
 
     assert len(mr | QuarterYear(2025, 2)) == 1

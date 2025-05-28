@@ -41,7 +41,7 @@ class MonthRange:
         raise ValueError(f"unable to parse {v} as {cls.__name__}")
 
     @classmethod
-    def parse(cls, v: Any, *, simplify: bool = True) -> Self:
+    def parse(cls, v: Any, *, year_align: bool = True) -> Self:
         for sub_type in cls.__sub_types__:
             try:
                 return sub_type.parse(v)
@@ -66,12 +66,12 @@ class MonthRange:
                 cls._abort_parse(v)
 
             result = MonthRange(start=start, end=end)
-            return result.simplify() if simplify else result
+            return result.year_align() if year_align else result
 
         elif isinstance(v, Sequence):
             if len(v) == 2:
                 result = MonthRange(start=cls.parse(v[0]), end=cls.parse(v[1]))
-                return result.simplify() if simplify else result
+                return result.year_align() if year_align else result
 
         cls._abort_parse(v)
 
@@ -151,13 +151,13 @@ class MonthRange:
     def touches(self, other: MonthRange) -> bool:
         return self.overlaps(other) or self.adjacent_to(other)
 
-    def simplify(self) -> MonthRange: ...
+    def year_align(self) -> MonthRange: ...
 
-    def union(self, *others: MonthRange, simplify: bool = True) -> List[MonthRange]: ...
+    def union(self, *others: MonthRange, year_align: bool = True) -> List[MonthRange]: ...
 
-    def intersect(self, *others: MonthRange, simplify: bool = True) -> MonthRange | None: ...
+    def intersect(self, *others: MonthRange, year_align: bool = True) -> MonthRange | None: ...
 
-    def split(self, by: Type[YearAlignedMonthRange] = ..., simplify: bool = True) -> List[MonthRange]: ...
+    def split(self, by: Type[YearAlignedMonthRange] = ..., year_align: bool = True) -> List[MonthRange]: ...
 
     def _assert_comparable(self, other: Any) -> None:
         if not isinstance(other, MonthRange):

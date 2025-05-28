@@ -14,7 +14,7 @@ class Year(YearAlignedMonthRange):
         super().__init__(year=year, index=index)
 
     @classmethod
-    def parse(cls, v: Any, *, simplify: bool = True) -> Year:
+    def parse(cls, v: Any, *, year_align: bool = True) -> Year:
         try:
             return cls(parse_year_int(v))
         except Exception:

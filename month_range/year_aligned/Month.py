@@ -24,7 +24,7 @@ class Month(YearAlignedMonthRange):
         # super().__init__(self, self)
 
     @classmethod
-    def parse(cls, v: Any, *, simplify: bool = True) -> Self:
+    def parse(cls, v: Any, *, year_align: bool = True) -> Self:
         try:
             if isinstance(v, date | datetime):
                 return cls(v.year, v.month)
@@ -78,5 +78,5 @@ class Month(YearAlignedMonthRange):
         return Month(year=self.year, index=self.index - offset)
 
     # # todo
-    # def split(self, by: Type[YearAlignedMonthRange] = Month, simplify: bool = True) -> List[Month]:
+    # def split(self, by: Type[YearAlignedMonthRange] = Month, year_align: bool = True) -> List[Month]:
     #     return [self]
