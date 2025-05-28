@@ -22,7 +22,7 @@ wheels = [
 
 [[package]]
 name = "month-range"
-version = "0.0.6"
+version = "0.0.7"
 source = { virtual = "." }
 
 [package.dev-dependencies]
