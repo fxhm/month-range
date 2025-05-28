@@ -5,15 +5,14 @@ from collections.abc import Mapping
 from datetime import date, datetime
 from typing import Any, Self, Sequence, Literal, Type, List
 
-from ..month_number import MonthNumber
 from ..year_aligned_month_range import YearAlignedMonthRange
 from .parse_util import parse_month_int, parse_year_int
 
 
-class Month(YearAlignedMonthRange):
+class Month(YearAlignedMonthRange[Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]):
     MONTH_COUNT: Literal[1] = 1
     _year: int
-    _index: MonthNumber
+    _index: Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
     def __init__(self, year: int, index: int) -> None:
         index = index - 1
@@ -62,7 +61,7 @@ class Month(YearAlignedMonthRange):
         return self._year
 
     @property
-    def index(self) -> MonthNumber:
+    def index(self) -> Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]:
         return self._index
 
     # the following methods are redefined here for performance reasons

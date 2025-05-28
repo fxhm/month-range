@@ -7,7 +7,7 @@ from ..year_aligned_month_range import YearAlignedMonthRange
 from .parse_util import parse_year_int
 
 
-class Year(YearAlignedMonthRange):
+class Year(YearAlignedMonthRange[Literal[1]]):
     MONTH_COUNT: Literal[12] = 12
 
     def __init__(self, year: int, index: int = 1) -> None:

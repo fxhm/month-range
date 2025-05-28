@@ -2,15 +2,15 @@ import math
 from abc import ABC
 from datetime import date
 from functools import total_ordering
-from typing import Self
+from typing import Self, Generic, TypeVar, Literal
 
 from .month_range import MonthRange
-from .month_number import MonthNumber
 
+TI = TypeVar("TI", bound=Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 
 @total_ordering
-class YearAlignedMonthRange(MonthRange, ABC):
-    MONTH_COUNT: MonthNumber
+class YearAlignedMonthRange(MonthRange, Generic[TI], ABC):
+    MONTH_COUNT: Literal[1, 2, 3, 4, 6, 12]
 
     def __init__(self, year: int, index: int) -> None:
         # handle out of range index offsets
@@ -32,7 +32,7 @@ class YearAlignedMonthRange(MonthRange, ABC):
         return self.first_month.year
 
     @property
-    def index(self) -> MonthNumber:
+    def index(self) -> TI:
         return math.ceil(self.first_month.index / self.MONTH_COUNT)
 
     @classmethod

@@ -8,7 +8,7 @@ from ..year_aligned_month_range import YearAlignedMonthRange
 from .parse_util import parse_quarter_int, parse_year_int
 
 
-class QuarterYear(YearAlignedMonthRange):
+class QuarterYear(YearAlignedMonthRange[Literal[1, 2, 3, 4]]):
     MONTH_COUNT: Literal[3] = 3
 
     @classmethod

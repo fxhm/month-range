@@ -8,7 +8,7 @@ from ..year_aligned_month_range import YearAlignedMonthRange
 from .parse_util import parse_year_int, parse_half_int
 
 
-class HalfYear(YearAlignedMonthRange):
+class HalfYear(YearAlignedMonthRange[Literal[1, 2]]):
     MONTH_COUNT: Literal[6] = 6
 
     @classmethod

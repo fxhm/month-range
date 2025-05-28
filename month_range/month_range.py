@@ -14,7 +14,7 @@ TIMEZONE_NAME = datetime.now().astimezone().tzname()
 
 
 class MonthRange:
-    # resolving circular deps. why do you make me do this python?
+    # circular deps. those are resolved in the __init__.py
     __aligned_types__: Tuple[Type[YearAlignedMonthRange], ...]
     __month_type__: Type[Month]
 
