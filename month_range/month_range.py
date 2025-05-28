@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from calendar import monthrange
 from datetime import date, datetime
 from operator import methodcaller
@@ -45,8 +46,6 @@ class MonthRange:
         raise ValueError(f"unable to parse {v} as {cls.__name__}")
 
     @classmethod
-    def parse(cls, v: Any, *, year_align: bool = True) -> Self:
-        for sub_type in cls.__aligned_types__:
     def parse(cls: Type[TS], v: Any, *, year_align: bool = True) -> TS:
         for aligned_type in cls.__year_aligned_types__:
             try:
@@ -153,13 +152,78 @@ class MonthRange:
     def touches(self, other: MonthRange) -> bool:
         return self.overlaps(other) or self.adjacent_to(other)
 
-    def year_align(self) -> MonthRange: ...
+    def year_align(self) -> MonthRange:
+        if self.first_month.year == self.last_month.year:
+            last_month_index = self.last_month.index
+            for aligned_type in MonthRange.__year_aligned_types__:
+                if last_month_index % aligned_type.MONTH_COUNT == 0:
+                    if last_month_index - aligned_type.MONTH_COUNT + 1 == self.first_month.index:
+                        return aligned_type(self.first_month.year, last_month_index // aligned_type.MONTH_COUNT)
+        return self
 
-    def union(self, *others: MonthRange, year_align: bool = True) -> List[MonthRange]: ...
+    @staticmethod
+    def union_(*month_ranges: MonthRange, year_align: bool = True) -> List[MonthRange]:
+        if len(month_ranges) == 0:
+            return []
+        result = []
+        month_ranges = sorted(month_ranges, key=lambda t: t.first_month)
+        prev = month_ranges[0]
+        for month_range in month_ranges[1:]:
+            if prev.overlaps(other=month_range) or month_range.directly_after(prev):
+                prev = MonthRange(
+                    start=min(prev.first_month, month_range.first_month),
+                    end=max(prev.last_month, month_range.last_month),
+                )
+            else:
+                result.append(prev)
+                prev = month_range
+        result.append(prev)
+        return list(map(methodcaller("year_align"), result)) if year_align else result
 
-    def intersect(self, *others: MonthRange, year_align: bool = True) -> MonthRange | None: ...
+    def union(self, *others: MonthRange, year_align: bool = True) -> List[MonthRange]:
+        return self.union_(self, *others, year_align=year_align)
 
-    def split(self, by: Type[YearAlignedMonthRange] = ..., year_align: bool = True) -> List[MonthRange]: ...
+    @staticmethod
+    def intersect_(*month_ranges: MonthRange, year_align: bool = True) -> MonthRange | None:
+        if len(month_ranges) == 0:
+            return None
+        intersection = month_ranges[0]
+        for month_range in month_ranges[1:]:
+            if intersection.overlaps(other=month_range):
+                intersection = MonthRange(
+                    start=max(intersection.first_month, month_range.first_month),
+                    end=min(intersection.last_month, month_range.last_month),
+                )
+            else:
+                return None
+        return intersection.year_align() if year_align else intersection
+
+    def intersect(self, *others: MonthRange, year_align: bool = True) -> MonthRange | None:
+        return self.intersect_(self, *others, year_align=year_align)
+
+    def split(self, by: Type[YearAlignedMonthRange] = ..., year_align: bool = True) -> List[MonthRange]:
+        result = []
+        split_begin: Month = self.first_month
+        last_month: Month = self.last_month
+        if by in (Ellipsis, MonthRange.__atomic_type__):
+            while split_begin <= last_month:
+                result.append(split_begin)
+                split_begin = split_begin.next()
+            return result
+        else:
+            split = MonthRange(
+                split_begin,
+                MonthRange.__atomic_type__(
+                    year=split_begin.year,
+                    index=math.ceil(split_begin.index / by.MONTH_COUNT) * by.MONTH_COUNT,
+                ),
+            )
+            while last_month not in split:
+                result.append(split)
+                split_begin = split.last_month.next()
+                split = MonthRange(split_begin, split.last_month.next(offset=by.MONTH_COUNT))
+            result.append(MonthRange(split_begin, last_month))
+        return list(map(methodcaller("year_align"), result)) if year_align else result
 
     def _assert_comparable(self, other: Any) -> None:
         if not isinstance(other, MonthRange):
@@ -246,10 +310,10 @@ class MonthRange:
         return self.prev(offset)
 
     def __or__(self, other: MonthRange) -> List[MonthRange]:
-        return self.union(other)
+        return self.union_(self, other, year_align=True)
 
     def __and__(self, other: MonthRange) -> MonthRange | None:
-        return self.intersect(other)
+        return self.intersect_(self, other, year_align=True)
 
 
 #     todo xor
