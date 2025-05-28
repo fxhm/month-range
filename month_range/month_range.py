@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 
 if TYPE_CHECKING:
-    from .YearAlignedMonthRange import YearAlignedMonthRange
+    from .year_aligned_month_range import YearAlignedMonthRange
     from .year_aligned import Month
 
 TIMEZONE_NAME = datetime.now().astimezone().tzname()

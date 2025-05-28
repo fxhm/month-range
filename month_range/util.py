@@ -1,8 +1,8 @@
 import math
 from typing import List, Type
 
-from .MonthRange import MonthRange
-from .YearAlignedMonthRange import YearAlignedMonthRange
+from .month_range import MonthRange
+from .year_aligned_month_range import YearAlignedMonthRange
 from .year_aligned import Month, QuarterYear, HalfYear, Year
 
 

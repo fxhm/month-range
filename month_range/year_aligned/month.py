@@ -6,7 +6,7 @@ from datetime import date, datetime
 from typing import Any, Self, Sequence, Literal, Type, List
 
 from ..month_number import MonthNumber
-from ..YearAlignedMonthRange import YearAlignedMonthRange
+from ..year_aligned_month_range import YearAlignedMonthRange
 from .parse_util import parse_month_int, parse_year_int
 
 

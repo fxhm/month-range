@@ -4,7 +4,7 @@ from datetime import date
 from functools import total_ordering
 from typing import Self
 
-from .MonthRange import MonthRange
+from .month_range import MonthRange
 from .month_number import MonthNumber
 
 

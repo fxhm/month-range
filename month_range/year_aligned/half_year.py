@@ -4,7 +4,7 @@ import math
 from datetime import date, datetime
 from typing import Literal, Any, Self, Mapping, Sequence
 
-from ..YearAlignedMonthRange import YearAlignedMonthRange
+from ..year_aligned_month_range import YearAlignedMonthRange
 from .parse_util import parse_year_int, parse_half_int
 
 

@@ -1,6 +1,6 @@
-from .MonthRange import MonthRange
+from .month_range import MonthRange
 from .month_number import MonthNumber
-from .YearAlignedMonthRange import YearAlignedMonthRange
+from .year_aligned_month_range import YearAlignedMonthRange
 from .year_aligned import Month, QuarterYear, HalfYear, Year
 from .util import union_month_ranges, intersect_month_ranges, year_align_month_range, split_month_range
 

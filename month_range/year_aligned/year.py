@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Any, Literal
 
-from ..YearAlignedMonthRange import YearAlignedMonthRange
+from ..year_aligned_month_range import YearAlignedMonthRange
 from .parse_util import parse_year_int
 
 
